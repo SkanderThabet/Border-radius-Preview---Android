@@ -41,6 +41,7 @@ class CornerRadiusViewModel @Inject constructor() : ViewModel() {
             when {
                 corner == Corner.All && current.contains(Corner.All) -> emptySet()
                 corner == Corner.All -> setOf(Corner.All)
+                current.contains(Corner.All) -> setOf(corner)
                 current.contains(corner) -> current - corner
                 else -> current + corner
             }
