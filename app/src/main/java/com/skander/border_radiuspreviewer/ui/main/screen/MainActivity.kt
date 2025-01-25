@@ -21,10 +21,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BorderradiusPreviewerTheme {
-                CornerRadiusPreviewer(
-
-                )
-
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    CornerRadiusPreviewer(
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
             }
         }
     }
