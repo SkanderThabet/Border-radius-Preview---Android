@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
 import androidx.compose.material3.Card
@@ -297,25 +298,75 @@ fun RadiusSlider(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
+
+        var textFieldValue by remember(value) { mutableStateOf(value.toInt().toString()) }
+        var isError by remember { mutableStateOf(false) }
+        var errorMessage by remember { mutableStateOf("") }
+
         SliderWithCustomThumbSample(
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = { newValue ->
+                textFieldValue = newValue.toInt().toString()
+                onValueChange(newValue)
+            },
             modifier = Modifier.fillMaxWidth()
         )
-
-        var textFieldValue by remember { mutableStateOf(value.toInt().toString()) }
 
         OutlinedTextField(
             value = textFieldValue,
             onValueChange = { newValue ->
-                textFieldValue = newValue
-                newValue.toFloatOrNull()?.let { onValueChange(it) }
+                when {
+                    newValue.isEmpty() -> {
+                        textFieldValue = newValue
+                        isError = false
+                        errorMessage = ""
+                    }
+                    newValue.toFloatOrNull() == null -> {
+                        textFieldValue = newValue
+                        isError = true
+                        errorMessage = "Please enter a valid number"
+                    }
+                    newValue.toFloatOrNull()!! > 100 -> {
+                        textFieldValue = newValue
+                        isError = true
+                        errorMessage = "Maximum value is 100"
+                    }
+                    newValue.toFloatOrNull()!! < 0 -> {
+                        textFieldValue = newValue
+                        isError = true
+                        errorMessage = "Minimum value is 0"
+                    }
+                    else -> {
+                        textFieldValue = newValue
+                        onValueChange(newValue.toFloat())
+                        isError = false
+                        errorMessage = ""
+                    }
+                }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Radius") },
+            label = { Text("Radius (0-100)") },
             placeholder = { Text("Enter radius value") },
-            isError = textFieldValue.isNotEmpty() && textFieldValue.toFloatOrNull() == null
+            isError = isError,
+            supportingText = {
+                if (isError) {
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            singleLine = true,
+            trailingIcon = {
+                if (isError) {
+                    Icon(
+                        imageVector = Icons.Filled.Error,
+                        contentDescription = "Error",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
         )
     }
 }
