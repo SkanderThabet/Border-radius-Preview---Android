@@ -20,11 +20,13 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSizeIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
@@ -49,7 +51,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -61,7 +65,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skander.border_radiuspreviewer.domain.model.Corner
-import com.skander.border_radiuspreviewer.domain.model.Corner.All.displayText
 import com.skander.border_radiuspreviewer.domain.model.CornerRadius
 import com.skander.border_radiuspreviewer.ui.main.viewModel.CornerRadiusViewModel
 
@@ -74,19 +77,48 @@ fun CornerRadiusPreviewer(
 
     val selectedCorners by viewModel.selectedCorners.collectAsStateWithLifecycle()
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    MainContent(
+        modifier,
+        selectedCorners,
+        viewModel,
+        cornerRadius
+    )
+}
+
+@Composable
+private fun MainContent(
+    modifier: Modifier,
+    selectedCorners: Set<Corner>,
+    viewModel: CornerRadiusViewModel,
+    cornerRadius: CornerRadius
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .systemBarsPadding()
     ) {
-        ChipGroupReflowSample(
-            selectedCorners,
-            viewModel::toggleCorner,
-            viewModel::resetRadius
-        )
-        BodyContent(cornerRadius)
-        FooterContent(selectedCorners, viewModel, modifier, cornerRadius)
+        Column(
+            modifier = modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            HeaderContent(selectedCorners, viewModel)
+            BodyContent(cornerRadius)
+            FooterContent(selectedCorners, viewModel, modifier, cornerRadius)
+        }
     }
+}
+
+@Composable
+private fun HeaderContent(
+    selectedCorners: Set<Corner>,
+    viewModel: CornerRadiusViewModel
+) {
+    ChipGroupReflowSample(
+        selectedCorners,
+        viewModel::toggleCorner,
+        viewModel::resetRadius
+    )
 }
 
 @Composable
@@ -182,7 +214,9 @@ fun ChipGroupReflowSample(
 ) {
     Column {
         FlowRow(
-            Modifier.fillMaxWidth(1f).wrapContentHeight(align = Alignment.Top),
+            Modifier
+                .fillMaxWidth(1f)
+                .wrapContentHeight(align = Alignment.Top),
             horizontalArrangement = Arrangement.Center,
         ) {
             setOf(Corner.TopStart, Corner.TopEnd, Corner.BottomStart, Corner.BottomEnd, Corner.All)
@@ -269,14 +303,19 @@ fun RadiusSlider(
             modifier = Modifier.fillMaxWidth()
         )
 
+        var textFieldValue by remember { mutableStateOf(value.toInt().toString()) }
+
         OutlinedTextField(
-            value = value.toInt().toString(),
-            onValueChange = {
-                onValueChange(it.toFloatOrNull() ?: value)
+            value = textFieldValue,
+            onValueChange = { newValue ->
+                textFieldValue = newValue
+                newValue.toFloatOrNull()?.let { onValueChange(it) }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Radius") }
+            label = { Text("Radius") },
+            placeholder = { Text("Enter radius value") },
+            isError = textFieldValue.isNotEmpty() && textFieldValue.toFloatOrNull() == null
         )
     }
 }
@@ -293,7 +332,8 @@ fun SliderWithCustomThumbSample(
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
         Slider(
-            modifier = Modifier.semantics { contentDescription = "Localized Description" }
+            modifier = Modifier
+                .semantics { contentDescription = "Localized Description" }
                 .requiredSizeIn(minWidth = thumbSize.width, minHeight = trackHeight),
             value = value,
             onValueChange = onValueChange,
@@ -306,13 +346,16 @@ fun SliderWithCustomThumbSample(
             thumb = {
                 Label(
                     label = {
-                        PlainTooltip(modifier = Modifier.sizeIn(45.dp, 25.dp).wrapContentWidth()) {
+                        PlainTooltip(modifier = Modifier
+                            .sizeIn(45.dp, 25.dp)
+                            .wrapContentWidth()) {
                             Text("%.2f".format(value))
                         }
                     },
                     interactionSource = interactionSource
                 ) {
-                    SliderDefaults.Thumb(interactionSource = interactionSource, modifier =  Modifier.size(thumbSize)
+                    SliderDefaults.Thumb(interactionSource = interactionSource, modifier =  Modifier
+                        .size(thumbSize)
                         .shadow(1.dp, CircleShape, clip = false)
                         .indication(
                             interactionSource = interactionSource,
