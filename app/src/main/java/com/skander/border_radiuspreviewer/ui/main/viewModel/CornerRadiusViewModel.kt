@@ -5,7 +5,6 @@ import com.skander.border_radiuspreviewer.domain.model.Corner
 import com.skander.border_radiuspreviewer.domain.model.CornerRadius
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
@@ -36,6 +35,12 @@ class CornerRadiusViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    fun resetRadius() {
+        _cornerRadius.update { current ->
+            current.copy(topStart = 0f, topEnd = 0f, bottomStart = 0f, bottomEnd = 0f)
+        }
+    }
+
     fun toggleCorner(corner: Corner) {
         _selectedCorners.update { current ->
             when {
@@ -43,7 +48,7 @@ class CornerRadiusViewModel @Inject constructor() : ViewModel() {
                 corner == Corner.All -> setOf(Corner.All)
                 current.contains(Corner.All) -> setOf(corner)
                 current.contains(corner) -> current - corner
-                else -> current + corner
+                else -> current + setOf(corner)  // Use setOf to ensure correct corner is added
             }
         }
     }

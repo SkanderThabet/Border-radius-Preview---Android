@@ -6,4 +6,12 @@ sealed class Corner {
     data object BottomStart : Corner()
     data object BottomEnd : Corner()
     data object All : Corner()
+
+    fun displayText(): String = when(this) {
+        TopStart -> "Top Start"
+        TopEnd -> "Top End"
+        BottomStart -> "Bottom Start"
+        BottomEnd -> "Bottom End"
+        All -> "All"
+    }
 }
